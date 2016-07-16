@@ -187,6 +187,17 @@ class NSSInteraction(object):
             os.environ["PATH"] = ';'.join([os.environ["PATH"], firefox])
             LOG.debug("PATH is now %s", os.environ["PATH"])
 
+        elif os.uname()[0] == "Darwin":
+            nssname = "libnss3.dylib"
+            locations = [ loc for loc in [
+                "/usr/local/lib/nss",
+                "/usr/local/lib",
+                "/opt/local/lib/nss",
+                "/sw/lib/firefox",
+                "/sw/lib/mozilla"
+                ] if os.path.exists(os.path.join(loc, nssname)) ]
+            if locations:
+                firefox = locations[0]
         else:
             nssname = "libnss3.so"
 
@@ -612,7 +623,14 @@ def get_profile(basepath, no_interactive, choice, list_profiles):
 def parse_sys_args():
     """Parse command line arguments
     """
-    profile_path = "~/.mozilla/firefox/"
+
+    if os.name == "nt":
+        profile_path = os.path.join(os.environ['APPDATA'],
+                "Mozilla", "Firefox")
+    elif os.uname()[0] == "Darwin":
+        profile_path = "~/Library/Application Support/Firefox"
+    else:
+        profile_path = "~/.mozilla/firefox"
 
     parser = argparse.ArgumentParser(
         description="Access Firefox/Thunderbird profiles and decrypt existing passwords"
